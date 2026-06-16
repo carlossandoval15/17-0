@@ -28,17 +28,29 @@
       <h1 class="home-title">Can you go 17-0?</h1>
       <h2 class="home-subtitle">Choose Your Mode</h2>
       <p class="home-desc">Draft legends from any era. Build the ultimate roster. Chase the perfect season.</p>
+      <div class="daily-card-wrapper">
+        <div class="mode-card daily-card" onclick="startDaily()">
+          <div class="daily-top">
+            <span class="daily-badge">TODAY</span>
+            <span class="daily-number" id="daily-number"></span>
+          </div>
+          <h3 class="mode-title daily-title">Daily Challenge</h3>
+          <p class="mode-desc">Same spins for everyone. One attempt. Share your score.</p>
+          <button class="btn btn-gold" id="daily-btn">Play Today's Challenge</button>
+          <div class="daily-streak" id="daily-streak"></div>
+        </div>
+      </div>
       <div class="mode-cards">
         <div class="mode-card" onclick="startGame('classic')">
           <div class="mode-icon">&#127944;</div>
           <h3 class="mode-title">Classic</h3>
-          <p class="mode-desc">Draft with full player stats visible. Make informed picks.</p>
+          <p class="mode-desc">Full stats visible. Make informed picks.</p>
           <button class="btn btn-primary">Play Classic</button>
         </div>
         <div class="mode-card" onclick="startGame('filmroom')">
           <div class="mode-icon">&#127909;</div>
           <h3 class="mode-title">Film Room</h3>
-          <p class="mode-desc">Stats hidden. Draft by memory. Test your football IQ.</p>
+          <p class="mode-desc">Stats hidden. Test your football IQ.</p>
           <button class="btn btn-secondary">Play Film Room</button>
         </div>
       </div>

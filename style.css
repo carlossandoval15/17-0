@@ -126,6 +126,67 @@ button { cursor: pointer; font-family: inherit; }
   font-size: 0.95rem;
 }
 
+/* Daily Challenge Card */
+.daily-card-wrapper {
+  margin-bottom: 1rem;
+}
+.daily-card {
+  background: linear-gradient(135deg, rgba(213,10,10,0.12), rgba(255,182,18,0.08)) !important;
+  border: 2px solid rgba(255,182,18,0.3) !important;
+  position: relative;
+  overflow: hidden;
+}
+.daily-card::before {
+  content: '';
+  position: absolute; top: 0; left: -100%; width: 200%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,182,18,0.06), transparent);
+  animation: dailyShimmer 3s infinite;
+}
+@keyframes dailyShimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+.daily-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.daily-badge {
+  background: #D50A0A;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.65rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  letter-spacing: 0.1em;
+}
+.daily-number {
+  color: #FFB612;
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+.daily-title { color: #FFB612 !important; }
+.btn-gold {
+  background: linear-gradient(135deg, #FFB612, #e6a210);
+  color: #000;
+  font-weight: 800;
+  box-shadow: 0 4px 15px rgba(255,182,18,0.3);
+}
+.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,182,18,0.4); }
+.btn-played {
+  background: rgba(255,255,255,0.08) !important;
+  color: #888 !important;
+  box-shadow: none !important;
+}
+.daily-streak {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #FFB612;
+  min-height: 1.2em;
+}
+
 /* Mode Cards */
 .mode-cards {
   display: grid;

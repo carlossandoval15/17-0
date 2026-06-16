@@ -31,7 +31,17 @@ function showHome() {
     rerolls: 1
   };
   clearField();
+  // Restore UI elements hidden by daily mode
+  document.querySelectorAll('.reroll-btn').forEach(b => b.style.display = '');
+  const pill = document.querySelector('.reroll-pill');
+  if (pill) pill.style.display = '';
+  const spinBtn = document.getElementById('spin-btn');
+  if (spinBtn) spinBtn.style.display = '';
+  const rerollBar = document.querySelector('.reroll-bar');
+  if (rerollBar) rerollBar.style.display = '';
+
   showScreen('home-screen');
+  updateDailyHome();
 }
 
 function showHowToPlay() {
@@ -346,7 +356,11 @@ function confirmPosition(pos) {
     setTimeout(showResults, 500);
   } else {
     updateRoundDisplay();
-    showSpinArea();
+    if (state.mode === 'daily') {
+      setTimeout(() => autoSpin(), 400);
+    } else {
+      showSpinArea();
+    }
   }
 }
 
@@ -422,6 +436,9 @@ function showResults() {
       </div>
     `;
   }).join('');
+
+  // Save daily result
+  if (state.mode === 'daily') saveDailyResult();
 
   if (record.wins === 17) triggerCelebration();
   showScreen('results-screen');
@@ -504,13 +521,20 @@ function getShareTextShort() {
   return `${emoji} I went ${record.label} in 17-0! Team Rating: ${totalOvr}. Can you beat me?\n${GAME_URL}`;
 }
 
+function getActiveShareText() {
+  return state.mode === 'daily' ? getDailyShareText() : getShareTextShort();
+}
+function getActiveShareTextFull() {
+  return state.mode === 'daily' ? getDailyShareText() : getShareText();
+}
+
 function shareToX() {
-  const text = encodeURIComponent(getShareTextShort());
+  const text = encodeURIComponent(getActiveShareText());
   window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
 }
 
 function shareToThreads() {
-  const text = encodeURIComponent(getShareTextShort());
+  const text = encodeURIComponent(getActiveShareText());
   window.open(`https://www.threads.net/intent/post?text=${text}`, '_blank');
 }
 
@@ -520,18 +544,18 @@ function shareToFB() {
 }
 
 function shareViaText() {
-  const text = encodeURIComponent(getShareTextShort());
+  const text = encodeURIComponent(getActiveShareText());
   window.open(`sms:?&body=${text}`, '_self');
 }
 
 function shareViaEmail() {
   const subject = encodeURIComponent('Can you go 17-0? NFL Draft Game');
-  const body = encodeURIComponent(getShareText());
+  const body = encodeURIComponent(getActiveShareTextFull());
   window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
 }
 
 function copyScore() {
-  navigator.clipboard.writeText(getShareText()).then(() => {
+  navigator.clipboard.writeText(getActiveShareTextFull()).then(() => {
     const msg = document.getElementById('copied-msg');
     msg.classList.remove('hidden');
     setTimeout(() => msg.classList.add('hidden'), 2000);
@@ -544,7 +568,7 @@ function nativeShare() {
     const record = calculateRecord(totalOvr);
     navigator.share({
       title: '17-0 NFL Draft Game',
-      text: getShareTextShort(),
+      text: getActiveShareText(),
       url: GAME_URL
     });
   } else {
@@ -552,7 +576,212 @@ function nativeShare() {
   }
 }
 
+// ===== DAILY CHALLENGE =====
+const LAUNCH_DATE = new Date('2026-06-16');
+
+function getTodayString() {
+  const d = new Date();
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function getDailyNumber() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const launch = new Date(LAUNCH_DATE); launch.setHours(0,0,0,0);
+  return Math.floor((today - launch) / 86400000) + 1;
+}
+
+function seededRandom(seed) {
+  let s = seed % 2147483647;
+  if (s <= 0) s += 2147483646;
+  return function() {
+    s = (s * 16807) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+function generateDailySpins(dateStr) {
+  const seed = parseInt(dateStr);
+  const rng = seededRandom(seed);
+  const allCombos = getValidCombos();
+  const spins = [];
+  for (let i = 0; i < 8; i++) {
+    const idx = Math.floor(rng() * allCombos.length);
+    spins.push(allCombos[idx]);
+  }
+  return spins;
+}
+
+function startDaily() {
+  const today = getTodayString();
+  const saved = localStorage.getItem('daily_' + today);
+  if (saved) {
+    showDailyAlreadyPlayed(JSON.parse(saved));
+    return;
+  }
+
+  state.mode = 'daily';
+  state.round = 1;
+  state.roster = {};
+  state.rerolls = 0;
+  state.spunThisRound = false;
+  state.dailyDate = today;
+  state.dailySpins = generateDailySpins(today);
+
+  clearField();
+  updateRoundDisplay();
+  showScreen('draft-screen');
+
+  // Hide swap buttons and reroll pill for daily
+  document.querySelectorAll('.reroll-btn').forEach(b => b.style.display = 'none');
+  document.querySelector('.reroll-pill').style.display = 'none';
+
+  setTimeout(() => autoSpin(), 600);
+}
+
+function autoSpin() {
+  const combo = state.dailySpins[state.round - 1];
+
+  const spinBtn = document.getElementById('spin-btn');
+  spinBtn.style.display = 'none';
+
+  const teamSlot = document.getElementById('slot-team');
+  const eraSlot = document.getElementById('slot-era');
+  const teamBox = teamSlot.closest('.spin-slot');
+  const eraBox = eraSlot.closest('.spin-slot');
+  const spinLogo = document.getElementById('spin-team-logo');
+
+  document.getElementById('spin-area').classList.remove('hidden');
+  document.getElementById('player-area').classList.add('hidden');
+  teamSlot.textContent = '?';
+  eraSlot.textContent = '?';
+  if (spinLogo) spinLogo.style.opacity = '0';
+
+  teamBox.classList.add('spinning');
+  eraBox.classList.add('spinning');
+
+  let ticks = 0;
+  const maxTicks = 18;
+  const teams = Object.keys(TEAMS);
+  const decades = DECADES;
+
+  const interval = setInterval(() => {
+    ticks++;
+    const rTeam = teams[Math.floor(Math.random() * teams.length)];
+    teamSlot.textContent = rTeam;
+    eraSlot.textContent = decades[Math.floor(Math.random() * decades.length)];
+    if (spinLogo) { spinLogo.src = getTeamLogoUrl(rTeam); spinLogo.style.opacity = '0.3'; }
+
+    if (ticks >= maxTicks) {
+      clearInterval(interval);
+      teamBox.classList.remove('spinning');
+      eraBox.classList.remove('spinning');
+      teamSlot.textContent = combo.team;
+      eraSlot.textContent = combo.decade;
+      if (spinLogo) { spinLogo.src = getTeamLogoUrl(combo.team); spinLogo.style.opacity = '1'; }
+
+      state.currentTeam = combo.team;
+      state.currentDecade = combo.decade;
+      state.currentPlayers = getFullRosterCombo(combo.team, combo.decade);
+      state.spunThisRound = true;
+
+      setTimeout(() => {
+        document.getElementById('spin-area').classList.add('hidden');
+        document.getElementById('player-area').classList.remove('hidden');
+        const logoEl = document.getElementById('team-logo');
+        if (logoEl) { logoEl.src = getTeamLogoUrl(state.currentTeam); logoEl.style.display = 'block'; }
+        document.getElementById('badge-team').textContent = TEAMS[state.currentTeam];
+        document.getElementById('badge-era').textContent = state.currentDecade;
+        // Hide reroll bar in daily
+        document.querySelector('.reroll-bar').style.display = 'none';
+        state.activeFilter = 'All';
+        updateFilterButtons();
+        renderPlayerList();
+      }, 400);
+    }
+  }, 70);
+}
+
+function saveDailyResult() {
+  const today = getTodayString();
+  const totalOvr = Object.values(state.roster).reduce((sum, p) => sum + p.ovr, 0);
+  const record = calculateRecord(totalOvr);
+  const picks = POSITIONS.map(pos => {
+    const p = state.roster[pos];
+    return p ? { name: p.name, pos: p.pos, ovr: p.ovr, team: p.team } : null;
+  });
+
+  const result = { record: record.label, wins: record.wins, totalOvr, picks, date: today };
+  localStorage.setItem('daily_' + today, JSON.stringify(result));
+
+  // Update streak
+  let streak = parseInt(localStorage.getItem('daily_streak') || '0');
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+  const yStr = `${yesterday.getFullYear()}${String(yesterday.getMonth()+1).padStart(2,'0')}${String(yesterday.getDate()).padStart(2,'0')}`;
+  if (localStorage.getItem('daily_' + yStr)) {
+    streak++;
+  } else {
+    streak = 1;
+  }
+  localStorage.setItem('daily_streak', streak.toString());
+  localStorage.setItem('daily_last', today);
+}
+
+function showDailyAlreadyPlayed(result) {
+  alert(`You already played today's Daily Challenge!\n\nYour result: ${result.record} (Rating: ${result.totalOvr})\n\nCome back tomorrow for a new challenge!`);
+}
+
+function getDailyShareText() {
+  const totalOvr = Object.values(state.roster).reduce((sum, p) => sum + p.ovr, 0);
+  const record = calculateRecord(totalOvr);
+  const num = getDailyNumber();
+  const streak = parseInt(localStorage.getItem('daily_streak') || '1');
+
+  const blocks = POSITIONS.map(pos => {
+    const p = state.roster[pos];
+    if (!p) return '⬛';
+    if (p.ovr >= 95) return '🟥';
+    if (p.ovr >= 88) return '🟧';
+    if (p.ovr >= 80) return '🟨';
+    return '⬜';
+  }).join('');
+
+  let text = `17-0 Daily #${num}\n`;
+  text += record.wins === 17 ? '🏆 ' : '';
+  text += `${record.label} | Rating: ${totalOvr}\n\n`;
+  text += `${blocks}\n`;
+  if (streak > 1) text += `🔥 ${streak} day streak\n`;
+  text += `\nCan you beat me?\n${GAME_URL}`;
+  return text;
+}
+
+function updateDailyHome() {
+  const numEl = document.getElementById('daily-number');
+  const btnEl = document.getElementById('daily-btn');
+  const streakEl = document.getElementById('daily-streak');
+  if (!numEl) return;
+
+  numEl.textContent = `#${getDailyNumber()}`;
+
+  const today = getTodayString();
+  const saved = localStorage.getItem('daily_' + today);
+  if (saved) {
+    const r = JSON.parse(saved);
+    btnEl.textContent = `Played: ${r.record}`;
+    btnEl.classList.add('btn-played');
+  }
+
+  const streak = parseInt(localStorage.getItem('daily_streak') || '0');
+  const lastPlayed = localStorage.getItem('daily_last');
+  // Check if streak is still active
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+  const yStr = `${yesterday.getFullYear()}${String(yesterday.getMonth()+1).padStart(2,'0')}${String(yesterday.getDate()).padStart(2,'0')}`;
+  if (streak > 0 && (lastPlayed === today || lastPlayed === yStr)) {
+    streakEl.innerHTML = `🔥 ${streak} day streak`;
+  }
+}
+
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
   showHome();
+  updateDailyHome();
 });
