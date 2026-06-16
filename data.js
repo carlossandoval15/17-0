@@ -201,7 +201,6 @@ const PLAYERS = [
   {name:"Von Miller",team:"DEN",decade:"10s",pos:"EDGE",stats:{sck:18.5,tfl:25,ff:7,tkl:59},ovr:96},
   {name:"Demaryius Thomas",team:"DEN",decade:"10s",pos:"WR",stats:{rec:105,yds:1619,td:11,ypr:15.4},ovr:89},
   {name:"Patrick Surtain II",team:"DEN",decade:"20s",pos:"DB",stats:{int:4,pd:18,tkl:52,ff:2},ovr:92},
-  {name:"Pat Surtain II",team:"DEN",decade:"20s",pos:"DB",stats:{int:4,pd:17,tkl:52,ff:2},ovr:91},
   {name:"Bradley Chubb",team:"DEN",decade:"20s",pos:"EDGE",stats:{sck:12,tfl:16,ff:3,tkl:48},ovr:84},
   {name:"Javonte Williams",team:"DEN",decade:"20s",pos:"RB",stats:{yds:903,td:7,ypc:4.4,rec:43},ovr:79},
   // ========== DETROIT LIONS ==========
