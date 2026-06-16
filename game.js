@@ -425,6 +425,16 @@ function showResults() {
 
   if (record.wins === 17) triggerCelebration();
   showScreen('results-screen');
+
+  // Auto-pop share modal after a short delay
+  setTimeout(() => {
+    const emoji = record.wins === 17 ? '&#127942;' : record.wins >= 14 ? '&#128293;' : record.wins >= 10 ? '&#127944;' : '&#128548;';
+    const modal = document.getElementById('share-modal');
+    document.getElementById('share-modal-record').innerHTML = `${emoji} ${record.label}`;
+    document.getElementById('share-modal-verdict').textContent = record.verdict;
+    document.getElementById('share-modal-rating').textContent = `Team Rating: ${totalOvr}`;
+    modal.classList.remove('hidden');
+  }, 800);
 }
 
 function triggerCelebration() {
@@ -465,6 +475,10 @@ function calculateRecord(totalOvr) {
   else if (totalOvr >= 560) { wins = 5; verdict = "Tank mode. At least you get a good draft pick."; }
   else { wins = 3; verdict = "Historically bad. Fire the GM."; }
   return { wins, losses: 17 - wins, label: `${wins}-${17 - wins}`, verdict };
+}
+
+function closeShareModal() {
+  document.getElementById('share-modal').classList.add('hidden');
 }
 
 // ===== SHARE =====

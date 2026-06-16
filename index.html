@@ -192,6 +192,29 @@
     </div>
   </div>
 
+  <!-- SHARE POPUP MODAL -->
+  <div id="share-modal" class="modal hidden">
+    <div class="modal-content share-modal-content">
+      <div class="share-modal-hero">
+        <div class="share-modal-badge">17-0</div>
+        <h2 id="share-modal-record" class="share-modal-record"></h2>
+        <p id="share-modal-verdict" class="share-modal-verdict"></p>
+        <p id="share-modal-rating" class="share-modal-rating"></p>
+      </div>
+      <p class="share-modal-cta">Challenge your friends!</p>
+      <div class="share-buttons share-modal-btns">
+        <button class="share-btn share-x" onclick="shareToX(); closeShareModal();">&#120143;</button>
+        <button class="share-btn share-threads" onclick="shareToThreads(); closeShareModal();">&#64;</button>
+        <button class="share-btn share-fb" onclick="shareToFB(); closeShareModal();">f</button>
+        <button class="share-btn share-text" onclick="shareViaText(); closeShareModal();">SMS</button>
+        <button class="share-btn share-email" onclick="shareViaEmail(); closeShareModal();">&#9993;</button>
+        <button class="share-btn share-copy" onclick="copyScore(); closeShareModal();">&#128203;</button>
+      </div>
+      <button class="btn btn-native-share share-modal-native" onclick="nativeShare(); closeShareModal();">Share...</button>
+      <button class="share-modal-skip" onclick="closeShareModal()">View My Roster</button>
+    </div>
+  </div>
+
   <!-- HOW TO PLAY MODAL -->
   <div id="help-modal" class="modal hidden">
     <div class="modal-content modal-wide">
