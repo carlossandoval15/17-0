@@ -142,9 +142,9 @@ function getOpenSlots() {
 const ALL_TEAMS = Object.keys(TEAMS);
 
 function getItemWidth() {
-  // Get actual rendered item width from DOM
   const item = document.querySelector('.roulette-item');
-  return item ? item.offsetWidth : 76;
+  if (!item) return 76;
+  return item.getBoundingClientRect().width;
 }
 
 function buildRouletteStrips() {
@@ -172,14 +172,16 @@ function buildRouletteStrips() {
 }
 
 function spinRoulette(stripEl, items, chosenItem, duration, onDone) {
-  const itemW = getItemWidth();
-  const trackW = stripEl.parentElement.offsetWidth;
-  const centerOff = trackW / 2 - itemW / 2;
+  // Read width from the actual first item in THIS strip for accuracy
+  const firstItem = stripEl.querySelector('.roulette-item');
+  const itemW = firstItem ? firstItem.getBoundingClientRect().width : 76;
+  const trackW = stripEl.parentElement.getBoundingClientRect().width;
+  const centerOff = Math.round(trackW / 2 - itemW / 2);
   const chosenIdx = items.indexOf(chosenItem);
 
   // Land on 3rd repeat of the chosen item
   const targetIdx = items.length * 2 + chosenIdx;
-  const targetX = -(targetIdx * itemW) + centerOff;
+  const targetX = Math.round(-(targetIdx * itemW) + centerOff);
 
   // Reset position
   stripEl.style.transition = 'none';
