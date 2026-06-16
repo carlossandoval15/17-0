@@ -138,6 +138,65 @@ function getOpenSlots() {
   return POSITIONS.filter(pos => !state.roster[pos]);
 }
 
+// ===== ROULETTE =====
+const ALL_TEAMS = Object.keys(TEAMS);
+const ITEM_W = 76;
+
+function buildRouletteStrips() {
+  const teamStrip = document.getElementById('team-roulette');
+  const eraStrip = document.getElementById('era-roulette');
+  if (!teamStrip) return;
+
+  // Build team strip - repeat 4x for seamless scroll
+  let teamHTML = '';
+  for (let r = 0; r < 4; r++) {
+    ALL_TEAMS.forEach(abbr => {
+      teamHTML += `<div class="roulette-item"><img class="roulette-logo" src="${getTeamLogoUrl(abbr)}" alt="" onerror="this.style.opacity='0.3'"><span class="roulette-abbr">${abbr}</span></div>`;
+    });
+  }
+  teamStrip.innerHTML = teamHTML;
+
+  // Build era strip - repeat 6x
+  let eraHTML = '';
+  for (let r = 0; r < 6; r++) {
+    DECADES.forEach(d => {
+      eraHTML += `<div class="roulette-item era-item"><span class="roulette-decade">${d}</span></div>`;
+    });
+  }
+  eraStrip.innerHTML = eraHTML;
+}
+
+function spinRoulette(stripEl, items, chosenItem, duration, onDone) {
+  const trackW = stripEl.parentElement.offsetWidth;
+  const centerOff = trackW / 2 - ITEM_W / 2;
+  const chosenIdx = items.indexOf(chosenItem);
+
+  // Land on 3rd repeat of the chosen item
+  const targetIdx = items.length * 2 + chosenIdx;
+  const targetX = -(targetIdx * ITEM_W) + centerOff;
+
+  // Reset position
+  stripEl.style.transition = 'none';
+  stripEl.style.transform = `translateX(${centerOff}px)`;
+
+  // Tick sounds during scroll
+  let tickCount = 0;
+  const tickInterval = setInterval(() => { playTick(); tickCount++; if (tickCount > 30) clearInterval(tickInterval); }, 60);
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      stripEl.style.transition = `transform ${duration}s cubic-bezier(0.12, 0.8, 0.3, 1)`;
+      stripEl.style.transform = `translateX(${targetX}px)`;
+    });
+  });
+
+  setTimeout(() => {
+    clearInterval(tickInterval);
+    playReveal();
+    if (onDone) onDone();
+  }, duration * 1000 + 100);
+}
+
 // ===== SPIN =====
 function spin() {
   if (state.spinning || state.spunThisRound) return;
@@ -147,49 +206,17 @@ function spin() {
   spinBtn.disabled = true;
   spinBtn.textContent = '...';
 
-  const teamSlot = document.getElementById('slot-team');
-  const eraSlot = document.getElementById('slot-era');
-  const teamBox = teamSlot.closest('.spin-slot');
-  const eraBox = eraSlot.closest('.spin-slot');
-  const spinLogo = document.getElementById('spin-team-logo');
-
-  teamBox.classList.add('spinning');
-  eraBox.classList.add('spinning');
-  if (spinLogo) spinLogo.style.opacity = '0';
-
   const openSlots = getOpenSlots();
   const combos = getSmartCombos(openSlots);
   const chosen = combos[Math.floor(Math.random() * combos.length)];
 
-  let ticks = 0;
-  const maxTicks = 20;
-  const teams = Object.keys(TEAMS);
-  const decades = DECADES;
+  // Spin team roulette first, then era
+  const teamStrip = document.getElementById('team-roulette');
+  const eraStrip = document.getElementById('era-roulette');
 
-  const interval = setInterval(() => {
-    ticks++;
-    playTick();
-    const rTeam = teams[Math.floor(Math.random() * teams.length)];
-    teamSlot.textContent = rTeam;
-    eraSlot.textContent = decades[Math.floor(Math.random() * decades.length)];
-    if (spinLogo) {
-      spinLogo.src = getTeamLogoUrl(rTeam);
-      spinLogo.style.opacity = '0.3';
-    }
-
-    if (ticks >= maxTicks) {
-      clearInterval(interval);
-      playReveal();
-      teamBox.classList.remove('spinning');
-      eraBox.classList.remove('spinning');
-
-      teamSlot.textContent = chosen.team;
-      eraSlot.textContent = chosen.decade;
-      if (spinLogo) {
-        spinLogo.src = getTeamLogoUrl(chosen.team);
-        spinLogo.style.opacity = '1';
-      }
-
+  spinRoulette(teamStrip, ALL_TEAMS, chosen.team, 2.5, () => {
+    // Team landed — now spin era
+    spinRoulette(eraStrip, DECADES, chosen.decade, 1.8, () => {
       state.currentTeam = chosen.team;
       state.currentDecade = chosen.decade;
       state.currentPlayers = getFullRosterCombo(chosen.team, chosen.decade);
@@ -197,11 +224,11 @@ function spin() {
       state.spunThisRound = true;
 
       spinBtn.disabled = false;
-      spinBtn.textContent = 'SPIN';
+      spinBtn.textContent = 'DRAFT';
 
-      setTimeout(() => showPlayerArea(), 400);
-    }
-  }, 80);
+      setTimeout(() => showPlayerArea(), 500);
+    });
+  });
 }
 
 // ===== RE-ROLL / SWAP =====
@@ -251,10 +278,12 @@ function updateRerolls() {
 function showSpinArea() {
   document.getElementById('spin-area').classList.remove('hidden');
   document.getElementById('player-area').classList.add('hidden');
-  document.getElementById('slot-team').textContent = '?';
-  document.getElementById('slot-era').textContent = '?';
-  const spinLogo = document.getElementById('spin-team-logo');
-  if (spinLogo) spinLogo.style.opacity = '0';
+  buildRouletteStrips();
+  // Reset strips to center
+  const teamStrip = document.getElementById('team-roulette');
+  const eraStrip = document.getElementById('era-roulette');
+  if (teamStrip) { teamStrip.style.transition = 'none'; teamStrip.style.transform = 'translateX(0)'; }
+  if (eraStrip) { eraStrip.style.transition = 'none'; eraStrip.style.transform = 'translateX(0)'; }
   state.spunThisRound = false;
 }
 
@@ -817,63 +846,37 @@ function autoSpin() {
   const spinBtn = document.getElementById('spin-btn');
   spinBtn.style.display = 'none';
 
-  const teamSlot = document.getElementById('slot-team');
-  const eraSlot = document.getElementById('slot-era');
-  const teamBox = teamSlot.closest('.spin-slot');
-  const eraBox = eraSlot.closest('.spin-slot');
-  const spinLogo = document.getElementById('spin-team-logo');
-
   document.getElementById('spin-area').classList.remove('hidden');
   document.getElementById('player-area').classList.add('hidden');
-  teamSlot.textContent = '?';
-  eraSlot.textContent = '?';
-  if (spinLogo) spinLogo.style.opacity = '0';
+  buildRouletteStrips();
 
-  teamBox.classList.add('spinning');
-  eraBox.classList.add('spinning');
+  const teamStrip = document.getElementById('team-roulette');
+  const eraStrip = document.getElementById('era-roulette');
 
-  let ticks = 0;
-  const maxTicks = 18;
-  const teams = Object.keys(TEAMS);
-  const decades = DECADES;
+  // Auto-spin team then era
+  setTimeout(() => {
+    spinRoulette(teamStrip, ALL_TEAMS, combo.team, 2.2, () => {
+      spinRoulette(eraStrip, DECADES, combo.decade, 1.5, () => {
+        state.currentTeam = combo.team;
+        state.currentDecade = combo.decade;
+        state.currentPlayers = getFullRosterCombo(combo.team, combo.decade);
+        state.spunThisRound = true;
 
-  const interval = setInterval(() => {
-    ticks++;
-    playTick();
-    const rTeam = teams[Math.floor(Math.random() * teams.length)];
-    teamSlot.textContent = rTeam;
-    eraSlot.textContent = decades[Math.floor(Math.random() * decades.length)];
-    if (spinLogo) { spinLogo.src = getTeamLogoUrl(rTeam); spinLogo.style.opacity = '0.3'; }
-
-    if (ticks >= maxTicks) {
-      clearInterval(interval);
-      playReveal();
-      teamBox.classList.remove('spinning');
-      eraBox.classList.remove('spinning');
-      teamSlot.textContent = combo.team;
-      eraSlot.textContent = combo.decade;
-      if (spinLogo) { spinLogo.src = getTeamLogoUrl(combo.team); spinLogo.style.opacity = '1'; }
-
-      state.currentTeam = combo.team;
-      state.currentDecade = combo.decade;
-      state.currentPlayers = getFullRosterCombo(combo.team, combo.decade);
-      state.spunThisRound = true;
-
-      setTimeout(() => {
-        document.getElementById('spin-area').classList.add('hidden');
-        document.getElementById('player-area').classList.remove('hidden');
-        const logoEl = document.getElementById('team-logo');
-        if (logoEl) { logoEl.src = getTeamLogoUrl(state.currentTeam); logoEl.style.display = 'block'; }
-        document.getElementById('badge-team').textContent = TEAMS[state.currentTeam];
-        document.getElementById('badge-era').textContent = state.currentDecade;
-        // Hide reroll bar in daily
-        document.querySelector('.reroll-bar').style.display = 'none';
-        state.activeFilter = 'All';
-        updateFilterButtons();
-        renderPlayerList();
-      }, 400);
-    }
-  }, 70);
+        setTimeout(() => {
+          document.getElementById('spin-area').classList.add('hidden');
+          document.getElementById('player-area').classList.remove('hidden');
+          const logoEl = document.getElementById('team-logo');
+          if (logoEl) { logoEl.src = getTeamLogoUrl(state.currentTeam); logoEl.style.display = 'block'; }
+          document.getElementById('badge-team').textContent = TEAMS[state.currentTeam];
+          document.getElementById('badge-era').textContent = state.currentDecade;
+          document.querySelector('.reroll-bar').style.display = 'none';
+          state.activeFilter = 'All';
+          updateFilterButtons();
+          renderPlayerList();
+        }, 500);
+      });
+    });
+  }, 300);
 }
 
 function saveDailyResult() {
@@ -977,4 +980,5 @@ function updateDailyHome() {
 document.addEventListener('DOMContentLoaded', () => {
   showHome();
   updateDailyHome();
+  buildRouletteStrips();
 });

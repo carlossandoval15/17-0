@@ -72,18 +72,25 @@
       <div class="draft-left">
         <!-- Spin Area -->
         <div id="spin-area" class="spin-area">
-          <img id="spin-team-logo" class="spin-logo" src="" alt="" style="opacity:0">
-          <div class="spin-slots">
-            <div class="spin-slot team-slot">
-              <span class="slot-label">TEAM</span>
-              <span class="slot-value" id="slot-team">?</span>
-            </div>
-            <div class="spin-slot era-slot">
-              <span class="slot-label">ERA</span>
-              <span class="slot-value" id="slot-era">?</span>
+          <div class="roulette-section">
+            <span class="roulette-label">TEAM</span>
+            <div class="roulette-track" id="team-track">
+              <div class="roulette-strip" id="team-roulette"></div>
+              <div class="roulette-pointer"></div>
             </div>
           </div>
-          <button class="btn btn-primary btn-spin" id="spin-btn" onclick="spin()">SPIN</button>
+          <div class="roulette-section">
+            <span class="roulette-label">ERA</span>
+            <div class="roulette-track era-track" id="era-track">
+              <div class="roulette-strip" id="era-roulette"></div>
+              <div class="roulette-pointer"></div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-spin" id="spin-btn" onclick="spin()">DRAFT</button>
+          <!-- Hidden slots for compatibility -->
+          <span id="slot-team" style="display:none"></span>
+          <span id="slot-era" style="display:none"></span>
+          <img id="spin-team-logo" style="display:none">
         </div>
         <!-- Player List -->
         <div id="player-area" class="player-area hidden">
@@ -95,8 +102,8 @@
                 <span class="badge era-badge" id="badge-era"></span>
               </div>
               <div class="reroll-bar">
-                <button class="reroll-btn" onclick="rerollTeam()">&#x21bb; Swap Team</button>
-                <button class="reroll-btn" onclick="rerollEra()">&#x21bb; Swap Era</button>
+                <button class="reroll-btn swap-team-btn" onclick="rerollTeam()"><span class="swap-icon">&#x21C4;</span> Trade Team</button>
+                <button class="reroll-btn swap-era-btn" onclick="rerollEra()"><span class="swap-icon">&#x21C5;</span> Switch Era</button>
               </div>
             </div>
           </div>

@@ -254,46 +254,119 @@ button { cursor: pointer; font-family: inherit; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2.5rem 0;
-}
-.spin-logo {
-  width: 80px; height: 80px;
-  object-fit: contain;
-  margin-bottom: 1rem;
-  transition: opacity 0.3s;
-  filter: drop-shadow(0 4px 15px rgba(255,255,255,0.1));
-}
-.spin-slots {
-  display: flex;
+  padding: 1.5rem 0;
   gap: 1rem;
-  margin-bottom: 1.5rem;
 }
-.spin-slot {
+
+/* Roulette Strips */
+.roulette-section {
+  width: 100%;
+}
+.roulette-label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: #D50A0A;
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+  text-align: center;
+}
+.roulette-track {
+  position: relative;
+  width: 100%;
+  height: 76px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.roulette-track::before,
+.roulette-track::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 40px;
+  z-index: 3;
+  pointer-events: none;
+}
+.roulette-track::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(10,14,26,0.95), transparent);
+}
+.roulette-track::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(10,14,26,0.95), transparent);
+}
+.roulette-pointer {
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 78px;
+  border: 2px solid #FFB612;
+  border-radius: 10px;
+  z-index: 2;
+  pointer-events: none;
+  box-shadow: 0 0 15px rgba(255,182,18,0.3), inset 0 0 15px rgba(255,182,18,0.05);
+}
+.roulette-strip {
+  display: flex;
+  position: absolute;
+  top: 0; left: 0;
+  height: 100%;
+  will-change: transform;
+}
+.roulette-item {
+  flex-shrink: 0;
+  width: 76px;
+  height: 76px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 1.25rem 1.75rem;
-  border-radius: 14px;
-  min-width: 130px;
-  border: 2px solid;
-  background: rgba(255,255,255,0.03);
+  justify-content: center;
+  gap: 2px;
 }
-.team-slot { border-color: #D50A0A; }
-.era-slot { border-color: #013369; }
-.slot-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.15em; color: #D50A0A; text-transform: uppercase; }
-.era-slot .slot-label { color: #5599ff; }
-.slot-value { font-size: 2.2rem; font-weight: 900; margin: 0.3rem 0; color: #fff; }
+.roulette-logo {
+  width: 42px; height: 42px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+.roulette-abbr {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: #888;
+  letter-spacing: 0.05em;
+}
+.era-item {}
+.roulette-decade {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #fff;
+}
+.era-track .roulette-pointer {
+  border-color: #5599ff;
+  box-shadow: 0 0 15px rgba(85,153,255,0.3), inset 0 0 15px rgba(85,153,255,0.05);
+}
+.era-track .roulette-label { color: #5599ff; }
 
-/* Spin Animation */
-.spin-slot.spinning .slot-value {
-  animation: slotFlicker 0.08s steps(1) infinite;
+/* Swap Buttons upgrade */
+.reroll-btn {
+  padding: 0.35rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255,182,18,0.3);
+  background: linear-gradient(135deg, rgba(255,182,18,0.08), rgba(255,182,18,0.15));
   color: #FFB612;
+  font-size: 0.72rem;
+  font-weight: 700;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
 }
-@keyframes slotFlicker {
-  0% { opacity: 1; }
-  50% { opacity: 0.3; }
-  100% { opacity: 1; }
-}
+.reroll-btn:hover { background: rgba(255,182,18,0.25); border-color: #FFB612; transform: scale(1.03); }
+.reroll-btn.used { opacity: 0.25; pointer-events: none; }
+.swap-icon { font-size: 0.9rem; }
 
 /* Player Area */
 .player-area { padding: 0; }
@@ -906,9 +979,11 @@ button { cursor: pointer; font-family: inherit; }
   .mode-cards { grid-template-columns: 1fr; }
   .home-badge { font-size: 2.5rem; padding: 0.85rem 1.5rem; }
   .home-title { font-size: 1.6rem; }
-  .spin-slots { flex-direction: column; gap: 0.75rem; }
-  .spin-slot { min-width: 100%; padding: 0.75rem; }
-  .slot-value { font-size: 1.5rem; }
+  .roulette-track { height: 66px; }
+  .roulette-item { width: 66px; height: 66px; }
+  .roulette-logo { width: 34px; height: 34px; }
+  .roulette-pointer { width: 68px; }
+  .roulette-decade { font-size: 1.3rem; }
   .player-stats { display: none; }
   .player-stats-line { display: block; }
   .player-card { padding: 0.5rem 0.6rem; }
