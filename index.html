@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>17-0 | Build Your All-Time NFL Roster</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-logo" onclick="showHome()">
+      <div class="logo-badge">17-0</div>
+      <span class="logo-text">17-0</span>
+    </div>
+    <div class="nav-links">
+      <a href="#" onclick="showHome()" class="nav-active">Play</a>
+    </div>
+  </nav>
+
+  <!-- HOME SCREEN -->
+  <div id="home-screen" class="screen active">
+    <div class="home-container">
+      <div class="home-logo">
+        <div class="home-badge">17-0</div>
+      </div>
+      <h1 class="home-title">Can you go 17-0?</h1>
+      <h2 class="home-subtitle">Choose Your Mode</h2>
+      <p class="home-desc">Draft legends from any era. Build the ultimate roster. Chase the perfect season.</p>
+      <div class="mode-cards">
+        <div class="mode-card" onclick="startGame('classic')">
+          <div class="mode-icon">&#127944;</div>
+          <h3 class="mode-title">Classic</h3>
+          <p class="mode-desc">Draft with full player stats visible. Make informed picks.</p>
+          <button class="btn btn-primary">Play Classic</button>
+        </div>
+        <div class="mode-card" onclick="startGame('filmroom')">
+          <div class="mode-icon">&#127909;</div>
+          <h3 class="mode-title">Film Room</h3>
+          <p class="mode-desc">Stats hidden. Draft by memory. Test your football IQ.</p>
+          <button class="btn btn-secondary">Play Film Room</button>
+        </div>
+      </div>
+      <div class="how-to-play" onclick="showHowToPlay()">How to Play &#8594;</div>
+    </div>
+  </div>
+
+  <!-- DRAFT SCREEN -->
+  <div id="draft-screen" class="screen">
+    <div class="draft-header">
+      <div class="round-info">
+        <div class="logo-badge small">17-0</div>
+        <span>Round <span id="round-num">1</span> / 8</span>
+        <span class="reroll-pill"><span id="reroll-count">1</span> swap</span>
+      </div>
+    </div>
+    <div class="draft-container">
+      <div class="draft-left">
+        <!-- Spin Area -->
+        <div id="spin-area" class="spin-area">
+          <img id="spin-team-logo" class="spin-logo" src="" alt="" style="opacity:0">
+          <div class="spin-slots">
+            <div class="spin-slot team-slot">
+              <span class="slot-label">TEAM</span>
+              <span class="slot-value" id="slot-team">?</span>
+            </div>
+            <div class="spin-slot era-slot">
+              <span class="slot-label">ERA</span>
+              <span class="slot-value" id="slot-era">?</span>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-spin" id="spin-btn" onclick="spin()">SPIN</button>
+        </div>
+        <!-- Player List -->
+        <div id="player-area" class="player-area hidden">
+          <div class="draft-top-bar">
+            <img id="team-logo" class="team-logo-lg" src="" alt="" style="display:none" onerror="this.style.display='none'">
+            <div class="draft-top-info">
+              <div class="draft-badges">
+                <span class="badge team-badge" id="badge-team"></span>
+                <span class="badge era-badge" id="badge-era"></span>
+              </div>
+              <div class="reroll-bar">
+                <button class="reroll-btn" onclick="rerollTeam()">&#x21bb; Swap Team</button>
+                <button class="reroll-btn" onclick="rerollEra()">&#x21bb; Swap Era</button>
+              </div>
+            </div>
+          </div>
+          <div class="player-filters">
+            <button class="filter-btn active" onclick="filterPlayers('All')">All</button>
+            <button class="filter-btn" onclick="filterPlayers('QB')">QB</button>
+            <button class="filter-btn" onclick="filterPlayers('RB')">RB</button>
+            <button class="filter-btn" onclick="filterPlayers('WR')">WR</button>
+            <button class="filter-btn" onclick="filterPlayers('K')">K</button>
+            <button class="filter-btn" onclick="filterPlayers('EDGE')">EDGE</button>
+            <button class="filter-btn" onclick="filterPlayers('LB')">LB</button>
+            <button class="filter-btn" onclick="filterPlayers('DB')">DB</button>
+          </div>
+          <div class="player-count" id="player-count"></div>
+          <div class="player-list" id="player-list"></div>
+        </div>
+      </div>
+      <div class="draft-right">
+        <div class="field">
+          <div class="field-inner">
+            <div class="yard-line yl-1"></div>
+            <div class="yard-line yl-2"></div>
+            <div class="yard-line yl-3"></div>
+            <div class="field-label off-label">OFFENSE</div>
+            <div class="field-label def-label">DEFENSE</div>
+            <div class="field-slot" id="pos-WR1" data-pos="WR1">
+              <span class="slot-pos">WR</span>
+              <span class="slot-name"></span>
+            </div>
+            <div class="field-slot" id="pos-QB" data-pos="QB">
+              <span class="slot-pos">QB</span>
+              <span class="slot-name"></span>
+            </div>
+            <div class="field-slot" id="pos-WR2" data-pos="WR2">
+              <span class="slot-pos">WR</span>
+              <span class="slot-name"></span>
+            </div>
+            <div class="field-slot" id="pos-RB" data-pos="RB">
+              <span class="slot-pos">RB</span>
+              <span class="slot-name"></span>
+            </div>
+            <div class="field-slot" id="pos-K" data-pos="K">
+              <span class="slot-pos">K</span>
+              <span class="slot-name"></span>
+            </div>
+            <div class="field-slot" id="pos-EDGE" data-pos="EDGE">
+              <span class="slot-pos">EDGE</span>
+              <span class="slot-name"></span>
+            </div>
+            <div class="field-slot" id="pos-LB" data-pos="LB">
+              <span class="slot-pos">LB</span>
+              <span class="slot-name"></span>
+            </div>
+            <div class="field-slot" id="pos-DB" data-pos="DB">
+              <span class="slot-pos">DB</span>
+              <span class="slot-name"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- POSITION PICK MODAL -->
+  <div id="position-modal" class="modal hidden">
+    <div class="modal-content">
+      <img id="modal-logo" class="modal-team-logo" src="" alt="" style="display:none" onerror="this.style.display='none'">
+      <h3>Choose Position for <span id="modal-player-name"></span></h3>
+      <p class="modal-sub">Which slot do you want to fill?</p>
+      <div class="position-btns" id="position-btns"></div>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div id="results-screen" class="screen">
+    <div class="results-container">
+      <div class="results-header">
+        <div class="logo-badge">17-0</div>
+        <h1 id="results-record" class="results-record"></h1>
+        <p id="results-verdict" class="results-verdict"></p>
+      </div>
+      <div class="results-roster" id="results-roster"></div>
+      <div class="results-stats">
+        <div class="stat-box">
+          <span class="stat-label">Team Rating</span>
+          <span class="stat-value" id="results-rating"></span>
+        </div>
+      </div>
+      <div class="results-actions">
+        <button class="btn btn-primary" onclick="showHome()">Play Again</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW TO PLAY MODAL -->
+  <div id="help-modal" class="modal hidden">
+    <div class="modal-content modal-wide">
+      <button class="modal-close" onclick="closeHelp()">&times;</button>
+      <h2 class="help-title">How to Play 17-0</h2>
+      <p>Build the ultimate NFL all-time team and see if you can go 17-0!</p>
+      <h4>The Draft</h4>
+      <p>Each round, spin to get a random NFL team and era.<br>
+         Select one player from that combination to add to your roster.<br>
+         Don't like your spin? Use a <strong>Swap</strong> to re-roll the team or era (2 per game).</p>
+      <h4>Building Your Lineup</h4>
+      <p>Fill all 8 positions: <span class="pos-tag qb">QB</span> <span class="pos-tag rb">RB</span> <span class="pos-tag wr">WR</span> <span class="pos-tag wr">WR</span> <span class="pos-tag k">K</span> <span class="pos-tag edge">EDGE</span> <span class="pos-tag lb">LB</span> <span class="pos-tag db">DB</span><br>
+         Tap a player to select, then choose their roster slot.</p>
+      <h4>Team Rating</h4>
+      <p>Each player has an overall rating based on their peak season performance.<br>
+         Higher combined ratings win more games.<br>
+         Aim for the perfect 17-0 season!</p>
+      <div class="help-cta">Can you go 17-0?</div>
+      <div class="help-actions">
+        <button class="btn btn-ghost" onclick="closeHelp()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
