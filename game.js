@@ -490,9 +490,7 @@ function showResults() {
   const bonusEl = document.getElementById('bonus-breakdown');
   if (bonusEl) {
     let parts = [`Base: ${baseOvr}`];
-    if (bonus.teamChem > 0) parts.push(`Team: +${bonus.teamChem}`);
-    if (bonus.eraSyn > 0) parts.push(`Era: +${bonus.eraSyn}`);
-    if (bonus.elitePicks > 0) parts.push(`Elite: +${bonus.elitePicks}`);
+    if (bonus.teamChem > 0) parts.push(`Chemistry: +${bonus.teamChem}`);
     bonusEl.textContent = parts.join(' | ');
     bonusEl.style.display = bonus.total > 0 ? 'block' : 'none';
   }
@@ -545,7 +543,7 @@ function showResults() {
     document.getElementById('share-modal-verdict').textContent = record.verdict;
     const bestTag = isNewBest ? ' &#11088; NEW PERSONAL BEST!' : '';
     const tagLine = tag ? `<div class="share-modal-tag">${tag}</div>` : '';
-    const bonusTag = bonus.total > 0 ? `<div style="font-size:0.75rem;color:#4CAF50;margin-top:3px">Base: ${baseOvr} + Bonus: ${bonus.total}</div>` : '';
+    const bonusTag = bonus.total > 0 ? `<div style="font-size:0.75rem;color:#4CAF50;margin-top:3px">Base: ${baseOvr} + Chemistry: +${bonus.teamChem}</div>` : '';
     document.getElementById('share-modal-rating').innerHTML = `${tagLine}${totalOvr} pts${bonusTag}${bestTag}`;
     modal.classList.remove('hidden');
   }, 800);
@@ -574,26 +572,16 @@ function triggerCelebration() {
 // ===== BONUS SCORING =====
 function calculateBonus() {
   const players = Object.values(state.roster);
-  let teamChem = 0, eraSyn = 0, elitePicks = 0;
+  let teamChem = 0;
 
-  // Team Chemistry: +5 per pair from same team
+  // Team Chemistry: +2 per pair of teammates
   for (let i = 0; i < players.length; i++) {
     for (let j = i + 1; j < players.length; j++) {
-      if (players[i].team === players[j].team) teamChem += 5;
+      if (players[i].team === players[j].team) teamChem += 2;
     }
   }
 
-  // Era Synergy: +3 per pair from same decade
-  for (let i = 0; i < players.length; i++) {
-    for (let j = i + 1; j < players.length; j++) {
-      if (players[i].decade === players[j].decade) eraSyn += 3;
-    }
-  }
-
-  // Elite Picks: +2 per 95+ OVR
-  players.forEach(p => { if (p.ovr >= 95) elitePicks += 2; });
-
-  return { teamChem, eraSyn, elitePicks, total: teamChem + eraSyn + elitePicks };
+  return { teamChem, total: teamChem };
 }
 
 function calculateRecord(totalOvr) {
@@ -687,11 +675,7 @@ function buildShareCard() {
 
   // Bonus breakdown
   lines.push('');
-  let bonusParts = [];
-  if (bonus.teamChem > 0) bonusParts.push(`Team +${bonus.teamChem}`);
-  if (bonus.eraSyn > 0) bonusParts.push(`Era +${bonus.eraSyn}`);
-  if (bonus.elitePicks > 0) bonusParts.push(`Elite +${bonus.elitePicks}`);
-  if (bonusParts.length > 0) lines.push(`Bonus: ${bonusParts.join(' | ')}`);
+  if (bonus.teamChem > 0) lines.push(`Chemistry: +${bonus.teamChem}`);
 
   if (mvp) lines.push(`⭐ MVP: ${mvp.name} (${mvp.ovr})`);
 
