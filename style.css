@@ -788,6 +788,14 @@ button { cursor: pointer; font-family: inherit; }
   color: #FFB612;
   font-weight: 800;
 }
+.share-modal-tag {
+  font-size: 0.85rem;
+  color: #D50A0A;
+  font-weight: 800;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
 .share-modal-cta {
   font-size: 1.1rem;
   font-weight: 800;

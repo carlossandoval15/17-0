@@ -519,12 +519,15 @@ function showResults() {
 
   // Auto-pop share modal after a short delay
   setTimeout(() => {
+    ensureGamertag();
+    const tag = getGamertag();
     const emoji = record.wins === 17 ? '&#127942;' : record.wins >= 14 ? '&#128293;' : record.wins >= 10 ? '&#127944;' : '&#128548;';
     const modal = document.getElementById('share-modal');
     document.getElementById('share-modal-record').innerHTML = `${emoji} ${record.label}`;
     document.getElementById('share-modal-verdict').textContent = record.verdict;
     const bestTag = isNewBest ? ' &#11088; NEW PERSONAL BEST!' : '';
-    document.getElementById('share-modal-rating').innerHTML = `Team Rating: ${totalOvr}${bestTag}`;
+    const tagLine = tag ? `<div class="share-modal-tag">${tag}</div>` : '';
+    document.getElementById('share-modal-rating').innerHTML = `${tagLine}Team Rating: ${totalOvr}${bestTag}`;
     modal.classList.remove('hidden');
   }, 800);
 }
@@ -573,34 +576,89 @@ function closeShareModal() {
   document.getElementById('share-modal').classList.add('hidden');
 }
 
+// ===== GAMERTAG =====
+function getGamertag() {
+  return localStorage.getItem('gamertag') || '';
+}
+
+function setGamertag(name) {
+  localStorage.setItem('gamertag', name.trim().substring(0, 20));
+}
+
+function ensureGamertag() {
+  if (!getGamertag()) {
+    const name = prompt('Enter your gamertag (shown when you share scores):');
+    if (name && name.trim()) setGamertag(name);
+  }
+  return getGamertag();
+}
+
 // ===== SHARE =====
 const GAME_URL = 'https://carlossandoval15.github.io/17-0/';
 
-function getShareText() {
-  const totalOvr = Object.values(state.roster).reduce((sum, p) => sum + p.ovr, 0);
-  const record = calculateRecord(totalOvr);
-  const rosterLines = POSITIONS.map(pos => {
-    const p = state.roster[pos];
-    if (!p) return '';
-    return `${pos}: ${p.name} (${p.ovr})`;
-  }).join('\n');
-
-  return `I went ${record.label} in 17-0! ` + (record.wins === 17 ? 'PERFECT SEASON! ' : '') +
-    `Team Rating: ${totalOvr}\n\n${rosterLines}\n\nCan you go 17-0?\n${GAME_URL}`;
+function ovrBlock(ovr) {
+  if (ovr >= 95) return '🟥';
+  if (ovr >= 88) return '🟧';
+  if (ovr >= 80) return '🟨';
+  return '⬜';
 }
 
-function getShareTextShort() {
+function getMVP() {
+  let best = null;
+  POSITIONS.forEach(pos => {
+    const p = state.roster[pos];
+    if (p && (!best || p.ovr > best.ovr)) best = p;
+  });
+  return best;
+}
+
+function buildShareCard() {
+  const tag = getGamertag();
   const totalOvr = Object.values(state.roster).reduce((sum, p) => sum + p.ovr, 0);
   const record = calculateRecord(totalOvr);
-  const emoji = record.wins === 17 ? '🏆' : record.wins >= 14 ? '🔥' : record.wins >= 10 ? '🏈' : '😤';
-  return `${emoji} I went ${record.label} in 17-0! Team Rating: ${totalOvr}. Can you beat me?\n${GAME_URL}`;
+  const mvp = getMVP();
+  const isDaily = state.mode === 'daily';
+  const num = getDailyNumber();
+
+  let lines = [];
+  lines.push('🏈 17-0' + (isDaily ? ` Daily #${num}` : ''));
+  lines.push('━━━━━━━━━━━━━━');
+  if (tag) lines.push(`${tag} | ${record.label} | ${totalOvr} pts`);
+  else lines.push(`${record.label} | ${totalOvr} pts`);
+  lines.push('');
+
+  // Position grid - 2 per line for compact look
+  const labels = ['QB','RB','WR','WR','K','EDG','LB','DB'];
+  for (let i = 0; i < 8; i += 2) {
+    const p1 = state.roster[POSITIONS[i]];
+    const p2 = state.roster[POSITIONS[i+1]];
+    const l1 = labels[i].padEnd(3);
+    const l2 = labels[i+1].padEnd(3);
+    const s1 = p1 ? `${ovrBlock(p1.ovr)} ${p1.ovr}` : '⬛ --';
+    const s2 = p2 ? `${ovrBlock(p2.ovr)} ${p2.ovr}` : '⬛ --';
+    lines.push(`${l1} ${s1}  ${l2} ${s2}`);
+  }
+
+  lines.push('');
+  if (mvp) lines.push(`MVP: ${mvp.name} (${mvp.ovr})`);
+
+  if (isDaily) {
+    const streak = parseInt(localStorage.getItem('daily_streak') || '1');
+    if (streak > 1) lines.push(`🔥 ${streak} day streak`);
+  }
+
+  lines.push('');
+  lines.push('Can you beat me? 👇');
+  lines.push(GAME_URL);
+
+  return lines.join('\n');
 }
 
 function getActiveShareText() {
-  return state.mode === 'daily' ? getDailyShareText() : getShareTextShort();
+  return buildShareCard();
 }
 function getActiveShareTextFull() {
-  return state.mode === 'daily' ? getDailyShareText() : getShareText();
+  return buildShareCard();
 }
 
 function shareToX() {
@@ -693,6 +751,9 @@ function startDaily() {
     showDailyAlreadyPlayed(JSON.parse(saved));
     return;
   }
+
+  // Prompt for gamertag on first daily play
+  ensureGamertag();
 
   state.mode = 'daily';
   state.round = 1;
@@ -787,7 +848,7 @@ function saveDailyResult() {
     return p ? { name: p.name, pos: p.pos, ovr: p.ovr, team: p.team } : null;
   });
 
-  const result = { record: record.label, wins: record.wins, totalOvr, picks, date: today };
+  const result = { record: record.label, wins: record.wins, totalOvr, picks, date: today, tag: getGamertag() };
   localStorage.setItem('daily_' + today, JSON.stringify(result));
 
   // Update streak
@@ -837,29 +898,7 @@ function closeDailyDone() {
   modal.classList.add('hidden');
 }
 
-function getDailyShareText() {
-  const totalOvr = Object.values(state.roster).reduce((sum, p) => sum + p.ovr, 0);
-  const record = calculateRecord(totalOvr);
-  const num = getDailyNumber();
-  const streak = parseInt(localStorage.getItem('daily_streak') || '1');
-
-  const blocks = POSITIONS.map(pos => {
-    const p = state.roster[pos];
-    if (!p) return '⬛';
-    if (p.ovr >= 95) return '🟥';
-    if (p.ovr >= 88) return '🟧';
-    if (p.ovr >= 80) return '🟨';
-    return '⬜';
-  }).join('');
-
-  let text = `17-0 Daily #${num}\n`;
-  text += record.wins === 17 ? '🏆 ' : '';
-  text += `${record.label} | Rating: ${totalOvr}\n\n`;
-  text += `${blocks}\n`;
-  if (streak > 1) text += `🔥 ${streak} day streak\n`;
-  text += `\nCan you beat me?\n${GAME_URL}`;
-  return text;
-}
+// getDailyShareText replaced by buildShareCard()
 
 function updateDailyHome() {
   const numEl = document.getElementById('daily-number');
