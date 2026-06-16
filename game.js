@@ -140,7 +140,12 @@ function getOpenSlots() {
 
 // ===== ROULETTE =====
 const ALL_TEAMS = Object.keys(TEAMS);
-const ITEM_W = 76;
+
+function getItemWidth() {
+  // Get actual rendered item width from DOM
+  const item = document.querySelector('.roulette-item');
+  return item ? item.offsetWidth : 76;
+}
 
 function buildRouletteStrips() {
   const teamStrip = document.getElementById('team-roulette');
@@ -156,9 +161,9 @@ function buildRouletteStrips() {
   }
   teamStrip.innerHTML = teamHTML;
 
-  // Build era strip - repeat 6x
+  // Build era strip - repeat 8x (more repeats for smooth scroll)
   let eraHTML = '';
-  for (let r = 0; r < 6; r++) {
+  for (let r = 0; r < 8; r++) {
     DECADES.forEach(d => {
       eraHTML += `<div class="roulette-item era-item"><span class="roulette-decade">${d}</span></div>`;
     });
@@ -167,13 +172,14 @@ function buildRouletteStrips() {
 }
 
 function spinRoulette(stripEl, items, chosenItem, duration, onDone) {
+  const itemW = getItemWidth();
   const trackW = stripEl.parentElement.offsetWidth;
-  const centerOff = trackW / 2 - ITEM_W / 2;
+  const centerOff = trackW / 2 - itemW / 2;
   const chosenIdx = items.indexOf(chosenItem);
 
   // Land on 3rd repeat of the chosen item
   const targetIdx = items.length * 2 + chosenIdx;
-  const targetX = -(targetIdx * ITEM_W) + centerOff;
+  const targetX = -(targetIdx * itemW) + centerOff;
 
   // Reset position
   stripEl.style.transition = 'none';

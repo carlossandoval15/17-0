@@ -303,7 +303,7 @@ button { cursor: pointer; font-family: inherit; }
   top: 0; bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 78px;
+  width: 76px;
   border: 2px solid #FFB612;
   border-radius: 10px;
   z-index: 2;
@@ -982,7 +982,7 @@ button { cursor: pointer; font-family: inherit; }
   .roulette-track { height: 66px; }
   .roulette-item { width: 66px; height: 66px; }
   .roulette-logo { width: 34px; height: 34px; }
-  .roulette-pointer { width: 68px; }
+  .roulette-pointer { width: 66px; }
   .roulette-decade { font-size: 1.3rem; }
   .player-stats { display: none; }
   .player-stats-line { display: block; }
