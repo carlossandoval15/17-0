@@ -173,6 +173,19 @@
           <span class="stat-value" id="results-rating"></span>
         </div>
       </div>
+      <div class="share-section">
+        <p class="share-label">Share Your Score</p>
+        <div class="share-buttons">
+          <button class="share-btn share-x" onclick="shareToX()">&#120143;</button>
+          <button class="share-btn share-threads" onclick="shareToThreads()">&#64;</button>
+          <button class="share-btn share-fb" onclick="shareToFB()">f</button>
+          <button class="share-btn share-text" onclick="shareViaText()">SMS</button>
+          <button class="share-btn share-email" onclick="shareViaEmail()">&#9993;</button>
+          <button class="share-btn share-copy" onclick="copyScore()">&#128203;</button>
+        </div>
+        <button class="btn btn-native-share" onclick="nativeShare()">Share...</button>
+        <p class="share-copied hidden" id="copied-msg">Copied to clipboard!</p>
+      </div>
       <div class="results-actions">
         <button class="btn btn-primary" onclick="showHome()">Play Again</button>
       </div>

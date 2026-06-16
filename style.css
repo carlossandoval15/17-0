@@ -623,6 +623,71 @@ button { cursor: pointer; font-family: inherit; }
 .stat-label { font-size: 0.72rem; color: #666; display: block; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
 .stat-value { font-size: 1.5rem; font-weight: 900; color: #FFB612; }
 
+/* Share Section */
+.share-section {
+  margin: 1.5rem 0;
+  text-align: center;
+}
+.share-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.75rem;
+}
+.share-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+.share-btn {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: none;
+  font-weight: 900;
+  font-size: 1.1rem;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.share-btn:hover { transform: scale(1.1); }
+.share-x { background: #000; border: 1px solid #333; }
+.share-threads { background: #000; border: 1px solid #333; font-size: 1.3rem; }
+.share-fb { background: #1877F2; }
+.share-text { background: #34C759; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.02em; }
+.share-email { background: #FF9500; font-size: 1.2rem; }
+.share-copy { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); font-size: 0.9rem; }
+.btn-native-share {
+  display: none;
+  margin: 0 auto;
+  padding: 0.5rem 1.5rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.share-copied {
+  color: #4CAF50;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+@supports (selector(:has(*))) {
+  @media (hover: none) {
+    .btn-native-share { display: inline-flex; }
+  }
+}
+
 .results-actions { margin-top: 1rem; }
 
 /* ===== CONFETTI ===== */

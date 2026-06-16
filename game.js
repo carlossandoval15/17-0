@@ -467,6 +467,77 @@ function calculateRecord(totalOvr) {
   return { wins, losses: 17 - wins, label: `${wins}-${17 - wins}`, verdict };
 }
 
+// ===== SHARE =====
+const GAME_URL = 'https://carlossandoval15.github.io/17-0/';
+
+function getShareText() {
+  const totalOvr = Object.values(state.roster).reduce((sum, p) => sum + p.ovr, 0);
+  const record = calculateRecord(totalOvr);
+  const rosterLines = POSITIONS.map(pos => {
+    const p = state.roster[pos];
+    if (!p) return '';
+    return `${pos}: ${p.name} (${p.ovr})`;
+  }).join('\n');
+
+  return `I went ${record.label} in 17-0! ` + (record.wins === 17 ? 'PERFECT SEASON! ' : '') +
+    `Team Rating: ${totalOvr}\n\n${rosterLines}\n\nCan you go 17-0?\n${GAME_URL}`;
+}
+
+function getShareTextShort() {
+  const totalOvr = Object.values(state.roster).reduce((sum, p) => sum + p.ovr, 0);
+  const record = calculateRecord(totalOvr);
+  const emoji = record.wins === 17 ? '🏆' : record.wins >= 14 ? '🔥' : record.wins >= 10 ? '🏈' : '😤';
+  return `${emoji} I went ${record.label} in 17-0! Team Rating: ${totalOvr}. Can you beat me?\n${GAME_URL}`;
+}
+
+function shareToX() {
+  const text = encodeURIComponent(getShareTextShort());
+  window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+}
+
+function shareToThreads() {
+  const text = encodeURIComponent(getShareTextShort());
+  window.open(`https://www.threads.net/intent/post?text=${text}`, '_blank');
+}
+
+function shareToFB() {
+  const url = encodeURIComponent(GAME_URL);
+  window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+}
+
+function shareViaText() {
+  const text = encodeURIComponent(getShareTextShort());
+  window.open(`sms:?&body=${text}`, '_self');
+}
+
+function shareViaEmail() {
+  const subject = encodeURIComponent('Can you go 17-0? NFL Draft Game');
+  const body = encodeURIComponent(getShareText());
+  window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
+}
+
+function copyScore() {
+  navigator.clipboard.writeText(getShareText()).then(() => {
+    const msg = document.getElementById('copied-msg');
+    msg.classList.remove('hidden');
+    setTimeout(() => msg.classList.add('hidden'), 2000);
+  });
+}
+
+function nativeShare() {
+  if (navigator.share) {
+    const totalOvr = Object.values(state.roster).reduce((sum, p) => sum + p.ovr, 0);
+    const record = calculateRecord(totalOvr);
+    navigator.share({
+      title: '17-0 NFL Draft Game',
+      text: getShareTextShort(),
+      url: GAME_URL
+    });
+  } else {
+    copyScore();
+  }
+}
+
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
   showHome();
