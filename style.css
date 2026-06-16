@@ -683,6 +683,7 @@ button { cursor: pointer; font-family: inherit; }
 }
 .stat-label { font-size: 0.72rem; color: #666; display: block; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
 .stat-value { font-size: 1.5rem; font-weight: 900; color: #FFB612; }
+.bonus-breakdown { font-size: 0.7rem; color: #4CAF50; font-weight: 600; margin-top: 0.25rem; display: block; }
 
 /* Share Section */
 .share-section {

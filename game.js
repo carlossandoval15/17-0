@@ -472,7 +472,9 @@ function updateRoundDisplay() {
 
 // ===== RESULTS =====
 function showResults() {
-  const totalOvr = Object.values(state.roster).reduce((sum, p) => sum + p.ovr, 0);
+  const baseOvr = Object.values(state.roster).reduce((sum, p) => sum + p.ovr, 0);
+  const bonus = calculateBonus();
+  const totalOvr = baseOvr + bonus.total;
   const record = calculateRecord(totalOvr);
 
   const recordEl = document.getElementById('results-record');
@@ -483,6 +485,17 @@ function showResults() {
   verdictEl.textContent = record.verdict;
 
   document.getElementById('results-rating').textContent = totalOvr;
+
+  // Show bonus breakdown
+  const bonusEl = document.getElementById('bonus-breakdown');
+  if (bonusEl) {
+    let parts = [`Base: ${baseOvr}`];
+    if (bonus.teamChem > 0) parts.push(`Team: +${bonus.teamChem}`);
+    if (bonus.eraSyn > 0) parts.push(`Era: +${bonus.eraSyn}`);
+    if (bonus.elitePicks > 0) parts.push(`Elite: +${bonus.elitePicks}`);
+    bonusEl.textContent = parts.join(' | ');
+    bonusEl.style.display = bonus.total > 0 ? 'block' : 'none';
+  }
 
   const rosterEl = document.getElementById('results-roster');
   rosterEl.innerHTML = POSITIONS.map(pos => {
@@ -508,6 +521,11 @@ function showResults() {
     `;
   }).join('');
 
+  // Store scores on state for share functions
+  state.lastBaseOvr = baseOvr;
+  state.lastBonus = bonus;
+  state.lastTotalOvr = totalOvr;
+
   // Save daily result
   if (state.mode === 'daily') saveDailyResult();
 
@@ -527,7 +545,8 @@ function showResults() {
     document.getElementById('share-modal-verdict').textContent = record.verdict;
     const bestTag = isNewBest ? ' &#11088; NEW PERSONAL BEST!' : '';
     const tagLine = tag ? `<div class="share-modal-tag">${tag}</div>` : '';
-    document.getElementById('share-modal-rating').innerHTML = `${tagLine}Team Rating: ${totalOvr}${bestTag}`;
+    const bonusTag = bonus.total > 0 ? `<div style="font-size:0.75rem;color:#4CAF50;margin-top:3px">Base: ${baseOvr} + Bonus: ${bonus.total}</div>` : '';
+    document.getElementById('share-modal-rating').innerHTML = `${tagLine}${totalOvr} pts${bonusTag}${bestTag}`;
     modal.classList.remove('hidden');
   }, 800);
 }
@@ -552,21 +571,46 @@ function triggerCelebration() {
   setTimeout(() => { c.remove(); el.classList.remove('celebrating'); }, 6000);
 }
 
+// ===== BONUS SCORING =====
+function calculateBonus() {
+  const players = Object.values(state.roster);
+  let teamChem = 0, eraSyn = 0, elitePicks = 0;
+
+  // Team Chemistry: +5 per pair from same team
+  for (let i = 0; i < players.length; i++) {
+    for (let j = i + 1; j < players.length; j++) {
+      if (players[i].team === players[j].team) teamChem += 5;
+    }
+  }
+
+  // Era Synergy: +3 per pair from same decade
+  for (let i = 0; i < players.length; i++) {
+    for (let j = i + 1; j < players.length; j++) {
+      if (players[i].decade === players[j].decade) eraSyn += 3;
+    }
+  }
+
+  // Elite Picks: +2 per 95+ OVR
+  players.forEach(p => { if (p.ovr >= 95) elitePicks += 2; });
+
+  return { teamChem, eraSyn, elitePicks, total: teamChem + eraSyn + elitePicks };
+}
+
 function calculateRecord(totalOvr) {
   let wins, verdict;
-  // 8 players, need avg ~96 per player for 17-0 (very hard)
-  if (totalOvr >= 775) { wins = 17; verdict = "LEGENDARY. Perfect season. You built a dynasty."; }
-  else if (totalOvr >= 760) { wins = 17; verdict = "UNDEFEATED! Your roster is all-time great."; }
-  else if (totalOvr >= 745) { wins = 16; verdict = "So close! One bad bounce away from perfection."; }
-  else if (totalOvr >= 730) { wins = 15; verdict = "Elite squad. Deep playoff run."; }
-  else if (totalOvr >= 715) { wins = 14; verdict = "Contender. This team wins in January."; }
-  else if (totalOvr >= 700) { wins = 13; verdict = "Solid playoff team. Missing one piece."; }
-  else if (totalOvr >= 685) { wins = 12; verdict = "Playoff bound. A few tough losses."; }
-  else if (totalOvr >= 665) { wins = 11; verdict = "Wild card team. Scrappy but dangerous."; }
-  else if (totalOvr >= 645) { wins = 10; verdict = "Above average. Bubble team."; }
-  else if (totalOvr >= 625) { wins = 9; verdict = "Mediocre. Not bad, not great."; }
-  else if (totalOvr >= 600) { wins = 8; verdict = "Below .500. Back to the drawing board."; }
-  else if (totalOvr >= 580) { wins = 7; verdict = "Rough season. Fans are frustrated."; }
+  // Total = Base OVR + Bonus. Bonus range ~0-30. Thresholds account for bonuses.
+  if (totalOvr >= 790) { wins = 17; verdict = "LEGENDARY. Perfect season. You built a dynasty."; }
+  else if (totalOvr >= 775) { wins = 17; verdict = "UNDEFEATED! Your roster is all-time great."; }
+  else if (totalOvr >= 760) { wins = 16; verdict = "So close! One bad bounce away from perfection."; }
+  else if (totalOvr >= 745) { wins = 15; verdict = "Elite squad. Deep playoff run."; }
+  else if (totalOvr >= 730) { wins = 14; verdict = "Contender. This team wins in January."; }
+  else if (totalOvr >= 715) { wins = 13; verdict = "Solid playoff team. Missing one piece."; }
+  else if (totalOvr >= 700) { wins = 12; verdict = "Playoff bound. A few tough losses."; }
+  else if (totalOvr >= 680) { wins = 11; verdict = "Wild card team. Scrappy but dangerous."; }
+  else if (totalOvr >= 660) { wins = 10; verdict = "Above average. Bubble team."; }
+  else if (totalOvr >= 640) { wins = 9; verdict = "Mediocre. Not bad, not great."; }
+  else if (totalOvr >= 615) { wins = 8; verdict = "Below .500. Back to the drawing board."; }
+  else if (totalOvr >= 590) { wins = 7; verdict = "Rough season. Fans are frustrated."; }
   else if (totalOvr >= 560) { wins = 5; verdict = "Tank mode. At least you get a good draft pick."; }
   else { wins = 3; verdict = "Historically bad. Fire the GM."; }
   return { wins, losses: 17 - wins, label: `${wins}-${17 - wins}`, verdict };
@@ -614,7 +658,9 @@ function getMVP() {
 
 function buildShareCard() {
   const tag = getGamertag();
-  const totalOvr = Object.values(state.roster).reduce((sum, p) => sum + p.ovr, 0);
+  const baseOvr = state.lastBaseOvr || Object.values(state.roster).reduce((sum, p) => sum + p.ovr, 0);
+  const bonus = state.lastBonus || calculateBonus();
+  const totalOvr = baseOvr + bonus.total;
   const record = calculateRecord(totalOvr);
   const mvp = getMVP();
   const isDaily = state.mode === 'daily';
@@ -622,12 +668,12 @@ function buildShareCard() {
 
   let lines = [];
   lines.push('🏈 17-0' + (isDaily ? ` Daily #${num}` : ''));
-  lines.push('━━━━━━━━━━━━━━');
+  lines.push('━━━━━━━━━━━━━━━');
   if (tag) lines.push(`${tag} | ${record.label} | ${totalOvr} pts`);
   else lines.push(`${record.label} | ${totalOvr} pts`);
   lines.push('');
 
-  // Position grid - 2 per line for compact look
+  // Position grid - 2 per line
   const labels = ['QB','RB','WR','WR','K','EDG','LB','DB'];
   for (let i = 0; i < 8; i += 2) {
     const p1 = state.roster[POSITIONS[i]];
@@ -639,8 +685,15 @@ function buildShareCard() {
     lines.push(`${l1} ${s1}  ${l2} ${s2}`);
   }
 
+  // Bonus breakdown
   lines.push('');
-  if (mvp) lines.push(`MVP: ${mvp.name} (${mvp.ovr})`);
+  let bonusParts = [];
+  if (bonus.teamChem > 0) bonusParts.push(`Team +${bonus.teamChem}`);
+  if (bonus.eraSyn > 0) bonusParts.push(`Era +${bonus.eraSyn}`);
+  if (bonus.elitePicks > 0) bonusParts.push(`Elite +${bonus.elitePicks}`);
+  if (bonusParts.length > 0) lines.push(`Bonus: ${bonusParts.join(' | ')}`);
+
+  if (mvp) lines.push(`⭐ MVP: ${mvp.name} (${mvp.ovr})`);
 
   if (isDaily) {
     const streak = parseInt(localStorage.getItem('daily_streak') || '1');
@@ -841,7 +894,9 @@ function autoSpin() {
 
 function saveDailyResult() {
   const today = getTodayString();
-  const totalOvr = Object.values(state.roster).reduce((sum, p) => sum + p.ovr, 0);
+  const baseOvr = Object.values(state.roster).reduce((sum, p) => sum + p.ovr, 0);
+  const bonus = calculateBonus();
+  const totalOvr = baseOvr + bonus.total;
   const record = calculateRecord(totalOvr);
   const picks = POSITIONS.map(pos => {
     const p = state.roster[pos];
