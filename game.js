@@ -1,5 +1,73 @@
 // ===== 17-0 GAME ENGINE =====
 
+// ===== SOUND EFFECTS (Web Audio API — no files needed) =====
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+function getAudio() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+  return audioCtx;
+}
+
+function playTick() {
+  try {
+    const ctx = getAudio(); const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.type = 'square'; o.frequency.value = 800 + Math.random() * 400;
+    g.gain.value = 0.06; o.connect(g); g.connect(ctx.destination);
+    o.start(); o.stop(ctx.currentTime + 0.03);
+  } catch(e) {}
+}
+
+function playPick() {
+  try {
+    const ctx = getAudio();
+    [523, 659, 784].forEach((freq, i) => {
+      const o = ctx.createOscillator(); const g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = freq;
+      g.gain.value = 0.1; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3 + i * 0.1);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(ctx.currentTime + i * 0.08); o.stop(ctx.currentTime + 0.3 + i * 0.1);
+    });
+  } catch(e) {}
+}
+
+function playCelebration() {
+  try {
+    const ctx = getAudio();
+    const notes = [523, 587, 659, 698, 784, 880, 988, 1047];
+    notes.forEach((freq, i) => {
+      const o = ctx.createOscillator(); const g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = freq;
+      g.gain.value = 0.08; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5 + i * 0.08);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(ctx.currentTime + i * 0.08); o.stop(ctx.currentTime + 0.5 + i * 0.08);
+    });
+  } catch(e) {}
+}
+
+function playReveal() {
+  try {
+    const ctx = getAudio(); const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = 440; o.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
+    g.gain.value = 0.1; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+    o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.2);
+  } catch(e) {}
+}
+
+// ===== PERSONAL BEST =====
+function getPersonalBest() {
+  return JSON.parse(localStorage.getItem('personal_best') || 'null');
+}
+
+function checkPersonalBest(totalOvr, record) {
+  const prev = getPersonalBest();
+  if (!prev || totalOvr > prev.totalOvr) {
+    const best = { totalOvr, record: record.label, wins: record.wins, date: getTodayString() };
+    localStorage.setItem('personal_best', JSON.stringify(best));
+    return true;
+  }
+  return false;
+}
+
 let state = {
   mode: 'classic',
   round: 1,
@@ -100,6 +168,7 @@ function spin() {
 
   const interval = setInterval(() => {
     ticks++;
+    playTick();
     const rTeam = teams[Math.floor(Math.random() * teams.length)];
     teamSlot.textContent = rTeam;
     eraSlot.textContent = decades[Math.floor(Math.random() * decades.length)];
@@ -110,6 +179,7 @@ function spin() {
 
     if (ticks >= maxTicks) {
       clearInterval(interval);
+      playReveal();
       teamBox.classList.remove('spinning');
       eraBox.classList.remove('spinning');
 
@@ -348,6 +418,7 @@ function confirmPosition(pos) {
   if (state.roster[pos]) return;
 
   state.roster[pos] = state.selectedPlayer;
+  playPick();
   closeModal();
   updateFieldSlot(pos);
 
@@ -440,7 +511,10 @@ function showResults() {
   // Save daily result
   if (state.mode === 'daily') saveDailyResult();
 
-  if (record.wins === 17) triggerCelebration();
+  // Personal best check
+  const isNewBest = checkPersonalBest(totalOvr, record);
+
+  if (record.wins === 17) { triggerCelebration(); playCelebration(); }
   showScreen('results-screen');
 
   // Auto-pop share modal after a short delay
@@ -449,7 +523,8 @@ function showResults() {
     const modal = document.getElementById('share-modal');
     document.getElementById('share-modal-record').innerHTML = `${emoji} ${record.label}`;
     document.getElementById('share-modal-verdict').textContent = record.verdict;
-    document.getElementById('share-modal-rating').textContent = `Team Rating: ${totalOvr}`;
+    const bestTag = isNewBest ? ' &#11088; NEW PERSONAL BEST!' : '';
+    document.getElementById('share-modal-rating').innerHTML = `Team Rating: ${totalOvr}${bestTag}`;
     modal.classList.remove('hidden');
   }, 800);
 }
@@ -666,6 +741,7 @@ function autoSpin() {
 
   const interval = setInterval(() => {
     ticks++;
+    playTick();
     const rTeam = teams[Math.floor(Math.random() * teams.length)];
     teamSlot.textContent = rTeam;
     eraSlot.textContent = decades[Math.floor(Math.random() * decades.length)];
@@ -673,6 +749,7 @@ function autoSpin() {
 
     if (ticks >= maxTicks) {
       clearInterval(interval);
+      playReveal();
       teamBox.classList.remove('spinning');
       eraBox.classList.remove('spinning');
       teamSlot.textContent = combo.team;
@@ -727,7 +804,37 @@ function saveDailyResult() {
 }
 
 function showDailyAlreadyPlayed(result) {
-  alert(`You already played today's Daily Challenge!\n\nYour result: ${result.record} (Rating: ${result.totalOvr})\n\nCome back tomorrow for a new challenge!`);
+  const modal = document.getElementById('daily-done-modal');
+  document.getElementById('daily-done-record').textContent = result.record;
+  document.getElementById('daily-done-rating').textContent = `Team Rating: ${result.totalOvr}`;
+
+  const rosterEl = document.getElementById('daily-done-roster');
+  rosterEl.innerHTML = result.picks.map((p, i) => {
+    if (!p) return '';
+    const slot = POSITIONS[i];
+    return `<div class="dd-pick"><span class="dd-pos">${slot}</span><span class="dd-name">${p.name}</span><span class="dd-ovr">${p.ovr}</span></div>`;
+  }).join('');
+
+  // Countdown to next daily
+  function updateCountdown() {
+    const now = new Date();
+    const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(0,0,0,0);
+    const diff = tomorrow - now;
+    const h = Math.floor(diff / 3600000); const m = Math.floor((diff % 3600000) / 60000); const s = Math.floor((diff % 60000) / 1000);
+    document.getElementById('daily-countdown').textContent =
+      `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+  updateCountdown();
+  const cdInterval = setInterval(updateCountdown, 1000);
+  modal._cdInterval = cdInterval;
+
+  modal.classList.remove('hidden');
+}
+
+function closeDailyDone() {
+  const modal = document.getElementById('daily-done-modal');
+  if (modal._cdInterval) clearInterval(modal._cdInterval);
+  modal.classList.add('hidden');
 }
 
 function getDailyShareText() {
@@ -772,11 +879,19 @@ function updateDailyHome() {
 
   const streak = parseInt(localStorage.getItem('daily_streak') || '0');
   const lastPlayed = localStorage.getItem('daily_last');
-  // Check if streak is still active
   const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
   const yStr = `${yesterday.getFullYear()}${String(yesterday.getMonth()+1).padStart(2,'0')}${String(yesterday.getDate()).padStart(2,'0')}`;
   if (streak > 0 && (lastPlayed === today || lastPlayed === yStr)) {
     streakEl.innerHTML = `🔥 ${streak} day streak`;
+  }
+
+  // Personal best
+  const bestBar = document.getElementById('personal-best-bar');
+  if (bestBar) {
+    const pb = getPersonalBest();
+    if (pb) {
+      bestBar.innerHTML = `<span class="pb-label">Personal Best</span><span class="pb-value">${pb.record} &middot; ${pb.totalOvr} Rating</span>`;
+    }
   }
 }
 

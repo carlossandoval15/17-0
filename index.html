@@ -54,6 +54,7 @@
           <button class="btn btn-secondary">Play Film Room</button>
         </div>
       </div>
+      <div class="personal-best-bar" id="personal-best-bar"></div>
       <div class="how-to-play" onclick="showHowToPlay()">How to Play &#8594;</div>
     </div>
   </div>
@@ -224,6 +225,21 @@
       </div>
       <button class="btn btn-native-share share-modal-native" onclick="nativeShare(); closeShareModal();">Share...</button>
       <button class="share-modal-skip" onclick="closeShareModal()">View My Roster</button>
+    </div>
+  </div>
+
+  <!-- DAILY ALREADY PLAYED MODAL -->
+  <div id="daily-done-modal" class="modal hidden">
+    <div class="modal-content daily-done-content">
+      <h2 class="dd-title">Today's Challenge Complete</h2>
+      <div class="dd-record" id="daily-done-record"></div>
+      <p class="dd-rating" id="daily-done-rating"></p>
+      <div class="dd-roster" id="daily-done-roster"></div>
+      <div class="dd-next">
+        <p class="dd-next-label">Next Daily Challenge in</p>
+        <p class="dd-countdown" id="daily-countdown">--:--:--</p>
+      </div>
+      <button class="btn btn-ghost" onclick="closeDailyDone()">Close</button>
     </div>
   </div>
 
